@@ -5,7 +5,7 @@ function calculateSimpleRevenue(purchase, _product) {
   }
   
   function calculateBonusByProfit(index, total, seller) {
-    const { profit } = seller;
+    const profit = seller.profit;
   
     if (index === 0) {
       return profit * 0.15;
@@ -19,7 +19,6 @@ function calculateSimpleRevenue(purchase, _product) {
   }
   
   function analyzeSalesData(data, options) {
-    // Проверка входных данных
     if (
       !data ||
       !Array.isArray(data.sellers) || data.sellers.length === 0 ||
@@ -29,13 +28,11 @@ function calculateSimpleRevenue(purchase, _product) {
       throw new Error('Некорректные входные данные');
     }
   
-    // Проверка опций
     const { calculateRevenue, calculateBonus } = options || {};
-    if (!calculateRevenue || !calculateBonus) {
+    if (typeof calculateRevenue !== 'function' || typeof calculateBonus !== 'function') {
       throw new Error('Отсутствуют функции расчёта');
     }
   
-    // Подготовка статистики по продавцам
     const sellerStats = data.sellers.map(seller => ({
       id: seller.id,
       name: `${seller.first_name} ${seller.last_name}`,
@@ -45,11 +42,9 @@ function calculateSimpleRevenue(purchase, _product) {
       products_sold: {}
     }));
   
-    // Индексация продавцов и товаров
     const sellerIndex = Object.fromEntries(sellerStats.map(s => [s.id, s]));
     const productIndex = Object.fromEntries(data.products.map(p => [p.sku, p]));
   
-    // Обработка продаж
     data.purchase_records.forEach(record => {
       const seller = sellerIndex[record.seller_id];
       if (!seller) return;
@@ -74,10 +69,8 @@ function calculateSimpleRevenue(purchase, _product) {
       });
     });
   
-    // Сортировка по прибыли
     sellerStats.sort((a, b) => b.profit - a.profit);
   
-    // Назначение бонусов и формирование top_products
     sellerStats.forEach((seller, index) => {
       const totalSellers = sellerStats.length;
       seller.bonus = +calculateBonus(index, totalSellers, seller).toFixed(2);
@@ -88,7 +81,6 @@ function calculateSimpleRevenue(purchase, _product) {
         .slice(0, 10);
     });
   
-    // Возврат результата
     return sellerStats.map(seller => ({
       seller_id: seller.id,
       name: seller.name,
